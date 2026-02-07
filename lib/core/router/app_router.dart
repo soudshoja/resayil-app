@@ -6,8 +6,10 @@ import '../../features/chats/screens/chat_detail_screen.dart';
 import '../../features/chats/screens/chat_info_screen.dart';
 import '../../features/chats/screens/chat_list_screen.dart';
 import '../../features/groups/screens/group_detail_screen.dart';
+import '../../features/groups/screens/group_info_screen.dart';
 import '../../features/groups/screens/group_list_screen.dart';
 import '../../features/groups/screens/create_group_screen.dart';
+import '../../features/groups/screens/add_participants_screen.dart';
 import '../../features/status/screens/status_list_screen.dart';
 import '../../features/status/screens/create_status_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -77,6 +79,22 @@ final routerProvider = Provider<GoRouter>((ref) {
                       groupId: state.pathParameters['groupId']!,
                       groupName: state.uri.queryParameters['name'] ?? '',
                     ),
+                    routes: [
+                      GoRoute(
+                        path: 'info',
+                        builder: (context, state) => GroupInfoScreen(
+                          groupId: state.pathParameters['groupId']!,
+                          groupName: state.uri.queryParameters['name'] ?? '',
+                        ),
+                      ),
+                      GoRoute(
+                        path: 'add-participants',
+                        builder: (context, state) => AddParticipantsScreen(
+                          groupId: state.pathParameters['groupId']!,
+                          groupName: state.uri.queryParameters['name'] ?? '',
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -5,6 +5,7 @@ import '../../../core/config/theme/app_colors.dart';
 import '../../../core/widgets/chat_avatar.dart';
 import '../../../core/models/status_update.dart';
 import '../providers/status_provider.dart';
+import 'status_viewer_screen.dart';
 
 class StatusListScreen extends ConsumerWidget {
   const StatusListScreen({super.key});
@@ -25,7 +26,8 @@ class StatusListScreen extends ConsumerWidget {
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {},
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'privacy', child: Text('Status privacy')),
+              const PopupMenuItem(
+                  value: 'privacy', child: Text('Status privacy')),
             ],
           ),
         ],
@@ -38,10 +40,15 @@ class StatusListScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Icon(Icons.error_outline,
+                  size: 48, color: AppColors.error),
+              const SizedBox(height: 16),
               Text(error.toString(),
-                  style: const TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(
+                      color: AppColors.textSecondary)),
               TextButton.icon(
-                onPressed: () => ref.invalidate(statusProvider),
+                onPressed: () =>
+                    ref.read(statusProvider.notifier).refresh(),
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
               ),
@@ -49,14 +56,21 @@ class StatusListScreen extends ConsumerWidget {
           ),
         ),
         data: (statuses) {
+          final recent =
+              statuses.where((s) => s.hasUnviewed).toList();
+          final viewed =
+              statuses.where((s) => !s.hasUnviewed).toList();
+
           return RefreshIndicator(
             color: AppColors.accent,
-            onRefresh: () => ref.read(statusProvider.notifier).refresh(),
+            onRefresh: () =>
+                ref.read(statusProvider.notifier).refresh(),
             child: ListView(
               children: [
                 // My Status
                 ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
                   leading: Stack(
                     children: [
                       const ChatAvatar(name: 'My Status', size: 52),
@@ -68,9 +82,12 @@ class StatusListScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: AppColors.accent,
                             shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.background, width: 2),
+                            border: Border.all(
+                                color: AppColors.background,
+                                width: 2),
                           ),
-                          child: const Icon(Icons.add, size: 14, color: Colors.white),
+                          child: const Icon(Icons.add,
+                              size: 14, color: Colors.white),
                         ),
                       ),
                     ],
@@ -81,7 +98,9 @@ class StatusListScreen extends ConsumerWidget {
                   ),
                   subtitle: const Text(
                     'Tap to add status update',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13),
                   ),
                   onTap: () => context.go('/status/create'),
                 ),
@@ -89,7 +108,7 @@ class StatusListScreen extends ConsumerWidget {
                 const Divider(),
 
                 // Recent updates
-                if (statuses.isNotEmpty) ...[
+                if (recent.isNotEmpty) ...[
                   const Padding(
                     padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
                     child: Text(
@@ -101,13 +120,12 @@ class StatusListScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  ...statuses
-                      .where((s) => s.hasUnviewed)
-                      .map((s) => _buildStatusTile(context, s, false)),
+                  ...recent.map((s) => _buildStatusTile(
+                      context, s, false, statuses)),
                 ],
 
                 // Viewed updates
-                if (statuses.any((s) => !s.hasUnviewed)) ...[
+                if (viewed.isNotEmpty) ...[
                   const Padding(
                     padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
                     child: Text(
@@ -119,9 +137,8 @@ class StatusListScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  ...statuses
-                      .where((s) => !s.hasUnviewed)
-                      .map((s) => _buildStatusTile(context, s, true)),
+                  ...viewed.map((s) => _buildStatusTile(
+                      context, s, true, statuses)),
                 ],
 
                 if (statuses.isEmpty)
@@ -130,12 +147,16 @@ class StatusListScreen extends ConsumerWidget {
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.circle_outlined, size: 64,
-                              color: AppColors.textSecondary.withValues(alpha: 0.5)),
+                          Icon(Icons.circle_outlined,
+                              size: 64,
+                              color: AppColors.textSecondary
+                                  .withValues(alpha: 0.5)),
                           const SizedBox(height: 16),
                           const Text(
                             'No status updates',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                            style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 16),
                           ),
                         ],
                       ),
@@ -153,7 +174,8 @@ class StatusListScreen extends ConsumerWidget {
             heroTag: 'edit',
             onPressed: () => context.go('/status/create'),
             backgroundColor: AppColors.surface,
-            child: const Icon(Icons.edit, color: AppColors.textPrimary),
+            child: const Icon(Icons.edit,
+                color: AppColors.textPrimary),
           ),
           const SizedBox(height: 12),
           FloatingActionButton(
@@ -166,15 +188,23 @@ class StatusListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusTile(BuildContext context, ContactStatus status, bool viewed) {
+  Widget _buildStatusTile(
+    BuildContext context,
+    ContactStatus status,
+    bool viewed,
+    List<ContactStatus> allStatuses,
+  ) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: Container(
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: viewed ? AppColors.textSecondary : AppColors.accent,
+            color: viewed
+                ? AppColors.textSecondary
+                : AppColors.accent,
             width: 2,
           ),
         ),
@@ -190,10 +220,24 @@ class StatusListScreen extends ConsumerWidget {
       ),
       subtitle: Text(
         _formatTime(status.lastUpdateTime),
-        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        style: const TextStyle(
+            color: AppColors.textSecondary, fontSize: 13),
       ),
       onTap: () {
-        // TODO: open status viewer
+        final contactIndex = allStatuses.indexOf(status);
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => StatusViewerScreen(
+              contacts: allStatuses,
+              initialContactIndex:
+                  contactIndex >= 0 ? contactIndex : 0,
+            ),
+            transitionsBuilder: (_, animation, __, child) {
+              return FadeTransition(
+                  opacity: animation, child: child);
+            },
+          ),
+        );
       },
     );
   }

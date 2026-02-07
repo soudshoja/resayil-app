@@ -1,9 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_client.dart';
-import '../../../core/api/api_constants.dart';
-import '../../../core/api/api_exception.dart';
 import '../../../core/models/status_update.dart';
+import '../repository/status_repository.dart';
+
+// ─── Status List ────────────────────────────────────────────
 
 final statusProvider =
     AsyncNotifierProvider<StatusNotifier, List<ContactStatus>>(
@@ -11,32 +10,45 @@ final statusProvider =
 
 class StatusNotifier extends AsyncNotifier<List<ContactStatus>> {
   @override
-  Future<List<ContactStatus>> build() => fetchStatuses();
+  Future<List<ContactStatus>> build() => _fetch();
 
-  Future<List<ContactStatus>> fetchStatuses() async {
-    try {
-      final dio = ref.read(dioProvider);
-      final response = await dio.get(ApiConstants.status);
-      final data = response.data;
-
-      if (data is Map && data['data'] is List) {
-        return (data['data'] as List)
-            .map((e) => ContactStatus.fromJson(e as Map<String, dynamic>))
-            .toList();
-      }
-      if (data is List) {
-        return data
-            .map((e) => ContactStatus.fromJson(e as Map<String, dynamic>))
-            .toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw ApiException.fromDioError(e);
-    }
+  Future<List<ContactStatus>> _fetch() async {
+    final repo = ref.read(statusRepositoryProvider);
+    return repo.getStatuses();
   }
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(fetchStatuses);
+    state = await AsyncValue.guard(_fetch);
   }
 }
+
+// ─── My Statuses (own updates) ──────────────────────────────
+
+final myStatusesProvider =
+    Provider<AsyncValue<ContactStatus?>>((ref) {
+  final all = ref.watch(statusProvider);
+  return all.whenData((statuses) {
+    // The API may include "own" status as a special entry
+    // or we filter by checking for a flag. For now return first with no contactId match
+    return null; // Own statuses handled via the create flow
+  });
+});
+
+// ─── Recent (unviewed) Statuses ─────────────────────────────
+
+final recentStatusesProvider =
+    Provider<AsyncValue<List<ContactStatus>>>((ref) {
+  final all = ref.watch(statusProvider);
+  return all.whenData(
+      (statuses) => statuses.where((s) => s.hasUnviewed).toList());
+});
+
+// ─── Viewed Statuses ────────────────────────────────────────
+
+final viewedStatusesProvider =
+    Provider<AsyncValue<List<ContactStatus>>>((ref) {
+  final all = ref.watch(statusProvider);
+  return all.whenData(
+      (statuses) => statuses.where((s) => !s.hasUnviewed).toList());
+});

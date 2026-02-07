@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/theme/app_colors.dart';
 import '../models/message.dart';
+import 'media_message_bubble.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
@@ -9,6 +10,11 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Use media bubble for non-text messages
+    if (message.type != 'text') {
+      return MediaMessageBubble(message: message);
+    }
+
     final isOutgoing = message.outgoing;
     return Align(
       alignment: isOutgoing ? Alignment.centerRight : Alignment.centerLeft,
@@ -33,7 +39,7 @@ class MessageBubble extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Sender name for group messages
             if (!isOutgoing && message.senderName != null)
@@ -64,6 +70,7 @@ class MessageBubble extends StatelessWidget {
             // Time and status
             Row(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
                   _formatTime(message.createdAt),

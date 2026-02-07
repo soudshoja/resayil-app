@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/chats/screens/chat_detail_screen.dart';
+import '../../features/chats/screens/chat_info_screen.dart';
 import '../../features/chats/screens/chat_list_screen.dart';
 import '../../features/groups/screens/group_detail_screen.dart';
 import '../../features/groups/screens/group_list_screen.dart';
@@ -46,6 +47,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                       chatId: state.pathParameters['chatId']!,
                       chatName: state.uri.queryParameters['name'] ?? '',
                     ),
+                    routes: [
+                      GoRoute(
+                        path: 'info',
+                        builder: (context, state) => ChatInfoScreen(
+                          chatId: state.pathParameters['chatId']!,
+                          chatName: state.uri.queryParameters['name'] ?? '',
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

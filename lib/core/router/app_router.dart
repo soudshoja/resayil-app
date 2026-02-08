@@ -15,6 +15,7 @@ import '../../features/status/screens/create_status_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../widgets/main_shell.dart';
+import '../screens/notifications_test_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -123,6 +124,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'profile',
                     builder: (context, state) => const ProfileScreen(),
+                  ),
+                  GoRoute(
+                    path: 'notifications-test',
+                    builder: (context, state) => const NotificationsTestScreen(),
                   ),
                 ],
               ),

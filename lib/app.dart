@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'core/config/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'features/chats/providers/chats_provider.dart';
 
 class ResayilApp extends ConsumerWidget {
   const ResayilApp({super.key});
@@ -11,6 +12,9 @@ class ResayilApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+
+    // Initialize connectivity-based retry for pending messages
+    ref.watch(pendingMessagesRetryProvider);
 
     return MaterialApp.router(
       title: 'Resayil',

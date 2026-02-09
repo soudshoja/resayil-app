@@ -45,5 +45,21 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access to capture photos for your messages</string>
+	<key>NSCameraUsageDescriptionAr</key>
+	<string>نحتاج إلى الوصول إلى الكاميرا لالتقاط الصور لرسائلك</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to select and share images</string>
+	<key>NSPhotoLibraryUsageDescriptionAr</key>
+	<string>نحتاج إلى الوصول إلى مكتبة الصور الخاصة بك لتحديد ومشاركة الصور</string>
+	<key>NSPhotoLibraryAddOnlyUsageDescription</key>
+	<string>We need access to save photos to your library</string>
+	<key>NSPhotoLibraryAddOnlyUsageDescriptionAr</key>
+	<string>نحتاج إلى الوصول لحفظ الصور في مكتبتك</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We need microphone access to record audio messages</string>
+	<key>NSMicrophoneUsageDescriptionAr</key>
+	<string>نحتاج إلى الوصول إلى الميكروفون لتسجيل الرسائل الصوتية</string>
 </dict>
 </plist>

@@ -43,3 +43,18 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase Configuration (iOS contains sensitive API keys - secret)
+**/GoogleService-Info.plist
+**/ios/Runner/GoogleService-Info.plist
+
+# Environment and build artifacts
+app-debug.apk
+app-release.apk
+*.keystore
+.env
+.env.*
+
+# CocoaPods
+Pods/
+Podfile.lock

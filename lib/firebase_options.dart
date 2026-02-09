@@ -65,4 +65,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'esayil-app.firebasestorage.app',
     iosBundleId: 'io.resayil.resayilApp',
   );
+
 }

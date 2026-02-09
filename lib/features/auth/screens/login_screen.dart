@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,14 +36,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
 
-    final success = await ref.read(authStateProvider.notifier).login(apiKey);
+    try {
+      final success = await ref.read(authStateProvider.notifier).login(apiKey);
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      if (success) {
-        context.go('/chats');
-      } else {
-        setState(() => _error = 'Invalid API key. Please try again.');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (success) {
+          context.go('/chats');
+        } else {
+          setState(() => _error = 'Invalid API key. Please try again.');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        String errorMessage = 'An error occurred. Please try again.';
+        if (e is TimeoutException) {
+          errorMessage = 'Connection timed out. Check your network and try again.';
+        } else if (e.toString().contains('SocketException') || e.toString().contains('Network')) {
+          errorMessage = 'Network error. Please check your connection.';
+        } else if (e.toString().contains('Unauthorized')) {
+          errorMessage = 'Invalid API key. Please verify and try again.';
+        }
+
+        setState(() => _error = errorMessage);
       }
     }
   }

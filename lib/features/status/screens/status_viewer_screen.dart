@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:video_player/video_player.dart';
 import '../../../core/config/theme/app_colors.dart';
 import '../../../core/models/status_update.dart';
 import '../../../core/widgets/chat_avatar.dart';
@@ -29,6 +30,9 @@ class _StatusViewerScreenState extends ConsumerState<StatusViewerScreen>
   int _currentStatusIndex = 0;
   Timer? _timer;
   late AnimationController _progressController;
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
+  bool _isVideoPlaying = false;
   static const _statusDuration = Duration(seconds: 5);
 
   @override
@@ -54,6 +58,7 @@ class _StatusViewerScreenState extends ConsumerState<StatusViewerScreen>
     _timer?.cancel();
     _progressController.dispose();
     _pageController.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -373,28 +378,11 @@ class _StatusViewerScreenState extends ConsumerState<StatusViewerScreen>
         );
 
       case 'video':
-        // Video placeholder — full video player would need video_player package
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            if (status.mediaUrl != null)
-              CachedNetworkImage(
-                imageUrl: status.mediaUrl!,
-                fit: BoxFit.contain,
-                placeholder: (_, __) => const Center(
-                  child:
-                      CircularProgressIndicator(color: Colors.white),
-                ),
-                errorWidget: (_, __, ___) => Container(
-                    color: Colors.black),
-              )
-            else
-              Container(color: Colors.black),
-            const Center(
-              child: Icon(Icons.play_circle_fill,
-                  color: Colors.white70, size: 72),
-            ),
-          ],
+        if (status.mediaUrl != null) {
+          return _buildVideoPlayer(status.mediaUrl!);
+        }
+        return const Center(
+          child: Icon(Icons.videocam, color: Colors.white54, size: 64),
         );
 
       default:
@@ -414,6 +402,109 @@ class _StatusViewerScreenState extends ConsumerState<StatusViewerScreen>
     hex = hex.replaceFirst('#', '');
     if (hex.length == 6) hex = 'FF$hex';
     return Color(int.parse(hex, radix: 16));
+  }
+
+  Widget _buildVideoPlayer(String videoUrl) {
+    return FutureBuilder<void>(
+      future: _initializeVideoPlayer(videoUrl),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error, color: Colors.white54, size: 64),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Failed to load video',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
+            );
+          }
+          if (_videoController != null && _isVideoInitialized) {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: _videoController!.value.aspectRatio,
+                    child: VideoPlayer(_videoController!),
+                  ),
+                ),
+                // Play/pause button overlay
+                Center(
+                  child: GestureDetector(
+                    onTap: _toggleVideoPlayPause,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Icon(
+                        _isVideoPlaying ? Icons.pause : Icons.play_arrow,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+        }
+        // Loading state
+        return const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        );
+      },
+    );
+  }
+
+  Future<void> _initializeVideoPlayer(String videoUrl) async {
+    if (_videoController == null || _videoController!.dataSource != videoUrl) {
+      await _videoController?.dispose();
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(videoUrl),
+      );
+      try {
+        await _videoController!.initialize();
+        if (mounted) {
+          setState(() {
+            _isVideoInitialized = true;
+            _isVideoPlaying = true;
+          });
+          _videoController!.play();
+          _pauseTimer();
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isVideoInitialized = false;
+          });
+        }
+        rethrow;
+      }
+    }
+  }
+
+  void _toggleVideoPlayPause() {
+    if (!_isVideoInitialized || _videoController == null) return;
+
+    setState(() {
+      if (_isVideoPlaying) {
+        _videoController!.pause();
+        _isVideoPlaying = false;
+        _resumeTimer();
+      } else {
+        _videoController!.play();
+        _isVideoPlaying = true;
+        _pauseTimer();
+      }
+    });
   }
 
   String _formatTime(DateTime time) {

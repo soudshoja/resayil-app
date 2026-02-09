@@ -1,11 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../api/api_client.dart';
+import '../router/app_router.dart';
+import '../services/local_notification_service.dart';
 import '../services/push_notification_service.dart';
 
-final pushNotificationServiceProvider = Provider<PushNotificationService>((ref) {
-  return PushNotificationService();
+final localNotificationServiceProvider = Provider<LocalNotificationService>((ref) {
+  return LocalNotificationService();
 });
 
-final pushNotificationInitializedProvider = StateProvider<bool>((ref) => false);
+final pushNotificationServiceProvider = Provider<PushNotificationService>((ref) {
+  return PushNotificationService(
+    dio: ref.watch(dioProvider),
+    router: ref.watch(routerProvider),
+    localNotifications: ref.watch(localNotificationServiceProvider),
+  );
+});
 
 class PushNotificationState {
   final bool isInitialized;
@@ -42,7 +52,8 @@ class PushNotificationState {
 class PushNotificationNotifier extends StateNotifier<PushNotificationState> {
   final PushNotificationService _service;
 
-  PushNotificationNotifier(this._service) : super(const PushNotificationState(isInitialized: false)) {
+  PushNotificationNotifier(this._service)
+      : super(const PushNotificationState(isInitialized: false)) {
     _initialize();
   }
 
@@ -87,7 +98,6 @@ class PushNotificationNotifier extends StateNotifier<PushNotificationState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Request permission is handled in initialize(), but we can retry
       await _service.initialize();
       state = state.copyWith(
         token: _service.token,

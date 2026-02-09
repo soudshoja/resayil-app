@@ -45,4 +45,7 @@ class ApiConstants {
 
   // Webhooks
   static const webhooks = '/webhooks';
+
+  // Device / Push Notifications
+  static const deviceToken = '/devices/token';
 }

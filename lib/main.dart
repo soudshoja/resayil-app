@@ -5,16 +5,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'app.dart';
 import 'core/firebase/firebase_options.dart';
+import 'core/services/push_notification_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Initialize Firebase if app is terminated
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  // TODO: Handle background message
-  // The message data will be available when app comes to foreground
+  await PushNotificationService.handleBackgroundMessage(message);
 }
 
 void main() async {

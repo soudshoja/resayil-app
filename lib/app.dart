@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'core/config/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'features/chats/providers/chats_provider.dart';
+import 'features/settings/providers/locale_provider.dart';
 
 class ResayilApp extends ConsumerWidget {
   const ResayilApp({super.key});
@@ -12,6 +13,7 @@ class ResayilApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final locale = ref.watch(localeProvider);
 
     // Initialize connectivity-based retry for pending messages
     ref.watch(pendingMessagesRetryProvider);
@@ -21,6 +23,7 @@ class ResayilApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       routerConfig: router,
+      locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "142292631941",
+    "project_id": "esayil-app",
+    "storage_bucket": "esayil-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:142292631941:android:6489b8b008b3d1ca5304ec",
+        "android_client_info": {
+          "package_name": "io.resayil.resayil_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5OTsf5jvzg5v7M2kHPQmiM-GNH5faByI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

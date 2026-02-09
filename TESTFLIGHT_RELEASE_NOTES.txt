@@ -1,0 +1,54 @@
+Version 1.0.0 - Initial Release
+
+FEATURES:
+- Secure messaging with end-to-end encryption
+- Direct messaging with individual contacts
+- Group chat support with admin controls
+- Status/stories feature for sharing updates
+- Push notifications (Firebase Cloud Messaging)
+- Dark mode UI with WhatsApp-style design
+- Real-time message delivery and read receipts
+- Image sharing and message attachments
+- Offline message queue and sync
+- Arabic (RTL) and English language support
+- Message search and chat history
+- Contact management integration
+
+TESTING FOCUS:
+- Message sending, delivery, and receiving (1-to-1)
+- Group creation, member management, and messaging
+- Push notification delivery and local notifications
+- Message status indicators (sent, delivered, read)
+- Image attachment and preview functionality
+- UI responsiveness in both portrait and landscape
+- App stability and crash recovery
+- Performance under normal and heavy load
+- Offline mode: message queuing and auto-sync
+- RTL language support (Arabic)
+- Dark mode rendering and theme consistency
+
+KNOWN LIMITATIONS:
+- Offline mode fully functional but may have timing edge cases
+- Audio/video messaging coming in Phase 7 (final release)
+- Call integration planned for future update
+- End-to-end encryption uses Firebase secure channels (update to Signal/TLS planned)
+
+DEVICE REQUIREMENTS:
+- iOS 11.0 or later
+- Minimum 100MB free storage
+- Active internet connection for messaging and notifications
+- Location services (optional, for future features)
+
+BUG REPORTS:
+Please report any issues via the TestFlight feedback form or email: dev@resayil.io
+
+BUILD INFORMATION:
+- Version: 1.0.0
+- Build Number: 2
+- Compilation Date: 2026-02-09
+- Target: iOS (App Store distribution)
+- Flutter SDK: 3.27.4
+- Dart SDK: 3.6.2
+
+THANKS FOR TESTING:
+Your feedback is crucial for the release version. Please test thoroughly and report any issues.

@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/chat.dart';
 import '../../../core/models/message.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/providers/connectivity_provider.dart';
 import '../repository/chats_repository.dart';
 
 // ─── Chat List ───────────────────────────────────────────────
@@ -28,6 +32,26 @@ class ChatsNotifier extends AsyncNotifier<List<Chat>> {
       _pollingTimer?.cancel();
     });
 
+    // Stale-while-revalidate: return cached data immediately
+    final db = ref.read(appDatabaseProvider);
+    final cachedChats = await db.getAllChats();
+
+    if (cachedChats.isNotEmpty) {
+      // Return cached data immediately
+      final chats = cachedChats.map(_fromCachedChat).toList();
+
+      // Fetch fresh data in background and update
+      _fetchPage(1).then((freshChats) {
+        state = AsyncValue.data(freshChats);
+        _updateCache(freshChats);
+      }).catchError((error, stack) {
+        // Keep cached data on error, just log
+      });
+
+      return chats;
+    }
+
+    // No cache: fetch normally
     return _fetchPage(1);
   }
 
@@ -36,7 +60,57 @@ class ChatsNotifier extends AsyncNotifier<List<Chat>> {
     final chats = await repo.getChats(page: page);
     _hasMore = chats.length >= 50;
     _currentPage = page;
+
+    // Update cache with fresh data
+    if (page == 1) {
+      await _updateCache(chats);
+    }
+
     return chats;
+  }
+
+  /// Convert CachedChat to Chat model
+  Chat _fromCachedChat(CachedChat cached) {
+    return Chat(
+      id: cached.id,
+      name: cached.name,
+      phone: cached.phone,
+      avatar: cached.avatar,
+      lastMessage: cached.lastMessage,
+      lastMessageTime: cached.lastMessageTime,
+      unreadCount: cached.unreadCount,
+      archived: cached.archived,
+      resolved: cached.resolved,
+      pinned: cached.pinned,
+      labels: cached.labels.isEmpty ? [] : (jsonDecode(cached.labels) as List).cast<String>(),
+      isGroup: cached.isGroup,
+      status: cached.status,
+    );
+  }
+
+  /// Update Drift cache with fresh chats
+  Future<void> _updateCache(List<Chat> chats) async {
+    final db = ref.read(appDatabaseProvider);
+    final companions = chats.map((chat) {
+      return CachedChatsCompanion(
+        id: drift.Value(chat.id),
+        name: drift.Value(chat.name),
+        phone: drift.Value(chat.phone),
+        avatar: drift.Value(chat.avatar),
+        lastMessage: drift.Value(chat.lastMessage),
+        lastMessageTime: drift.Value(chat.lastMessageTime),
+        unreadCount: drift.Value(chat.unreadCount),
+        archived: drift.Value(chat.archived),
+        resolved: drift.Value(chat.resolved),
+        pinned: drift.Value(chat.pinned),
+        labels: drift.Value(jsonEncode(chat.labels)),
+        isGroup: drift.Value(chat.isGroup),
+        status: drift.Value(chat.status),
+        syncedAt: drift.Value(DateTime.now()),
+      );
+    }).toList();
+
+    await db.upsertChats(companions);
   }
 
   Future<void> refresh() async {
@@ -102,6 +176,26 @@ class ChatMessagesNotifier extends FamilyAsyncNotifier<List<Message>, String> {
       _pollingTimer?.cancel();
     });
 
+    // Stale-while-revalidate: return cached messages immediately
+    final db = ref.read(appDatabaseProvider);
+    final cachedMessages = await db.getMessages(arg);
+
+    if (cachedMessages.isNotEmpty) {
+      // Return cached data immediately
+      final messages = cachedMessages.map(_fromCachedMessage).toList();
+
+      // Fetch fresh data in background and update
+      _fetchPage(arg, 1).then((freshMessages) {
+        state = AsyncValue.data(freshMessages);
+        _updateCache(freshMessages);
+      }).catchError((error, stack) {
+        // Keep cached data on error, just log
+      });
+
+      return messages;
+    }
+
+    // No cache: fetch normally
     return _fetchPage(arg, 1);
   }
 
@@ -110,7 +204,57 @@ class ChatMessagesNotifier extends FamilyAsyncNotifier<List<Message>, String> {
     final messages = await repo.getMessages(chatId, page: page);
     _hasMore = messages.length >= 50;
     _currentPage = page;
+
+    // Update cache with fresh data
+    if (page == 1) {
+      await _updateCache(messages);
+    }
+
     return messages;
+  }
+
+  /// Convert CachedMessage to Message model
+  Message _fromCachedMessage(CachedMessage cached) {
+    return Message(
+      id: cached.id,
+      chatId: cached.chatId,
+      type: cached.type,
+      text: cached.textContent,
+      mediaUrl: cached.mediaUrl,
+      mediaCaption: cached.mediaCaption,
+      fileName: cached.fileName,
+      mimeType: cached.mimeType,
+      outgoing: cached.outgoing,
+      status: cached.status,
+      senderName: cached.senderName,
+      createdAt: cached.createdAt,
+      readAt: cached.readAt,
+    );
+  }
+
+  /// Update Drift cache with fresh messages
+  Future<void> _updateCache(List<Message> messages) async {
+    final db = ref.read(appDatabaseProvider);
+    final companions = messages.map((msg) {
+      return CachedMessagesCompanion(
+        id: drift.Value(msg.id),
+        chatId: drift.Value(msg.chatId),
+        type: drift.Value(msg.type),
+        textContent: drift.Value(msg.text),
+        mediaUrl: drift.Value(msg.mediaUrl),
+        mediaCaption: drift.Value(msg.mediaCaption),
+        fileName: drift.Value(msg.fileName),
+        mimeType: drift.Value(msg.mimeType),
+        outgoing: drift.Value(msg.outgoing),
+        status: drift.Value(msg.status),
+        senderName: drift.Value(msg.senderName),
+        createdAt: drift.Value(msg.createdAt),
+        readAt: drift.Value(msg.readAt),
+        syncedAt: drift.Value(DateTime.now()),
+      );
+    }).toList();
+
+    await db.upsertMessages(companions);
   }
 
   Future<void> refresh() async {
@@ -190,3 +334,65 @@ final filteredChatsProvider = Provider<AsyncValue<List<Chat>>>((ref) {
     }
   });
 });
+
+// ─── Connectivity-based Retry ────────────────────────────────
+
+/// Provider that watches connectivity and retries pending messages
+final pendingMessagesRetryProvider = Provider<void>((ref) {
+  // Watch for connectivity changes
+  ref.listen(isOnlineProvider, (previous, current) {
+    // When connection is restored (offline -> online)
+    if (previous == false && current == true) {
+      _retryPendingMessages(ref);
+    }
+  });
+});
+
+/// Retry all pending messages when connectivity is restored
+Future<void> _retryPendingMessages(Ref ref) async {
+  final db = ref.read(appDatabaseProvider);
+  final repo = ref.read(chatsRepositoryProvider);
+
+  // Get all messages with 'sending' status
+  final pendingMessages = await db.getPendingMessages();
+
+  for (final cached in pendingMessages) {
+    try {
+      // Retry sending the message
+      final message = Message(
+        id: cached.id,
+        chatId: cached.chatId,
+        type: cached.type,
+        text: cached.textContent,
+        mediaUrl: cached.mediaUrl,
+        mediaCaption: cached.mediaCaption,
+        fileName: cached.fileName,
+        mimeType: cached.mimeType,
+        outgoing: cached.outgoing,
+        status: cached.status,
+        senderName: cached.senderName,
+        createdAt: cached.createdAt,
+        readAt: cached.readAt,
+      );
+
+      // Send the message (assuming text message for now)
+      if (message.type == 'text' && message.text != null) {
+        final sent = await repo.sendTextMessage(message.chatId, message.text!);
+
+        if (sent != null) {
+          // Update status to 'sent' in cache
+          await db.updateMessageStatus(message.id, 'sent');
+
+          // Update in provider if the chat is being watched
+          final chatNotifier = ref.read(
+            chatMessagesProvider(message.chatId).notifier,
+          );
+          chatNotifier.updateMessageStatus(message.id, 'sent');
+        }
+      }
+    } catch (e) {
+      // Log error but continue with other messages
+      // Could also mark as 'failed' if needed
+    }
+  }
+}

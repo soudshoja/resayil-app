@@ -166,7 +166,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: navigate to contact picker / new chat
+          context.push('/chats/contacts');
         },
         child: const Icon(Icons.chat),
       ),

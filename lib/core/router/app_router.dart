@@ -5,6 +5,7 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/chats/screens/chat_detail_screen.dart';
 import '../../features/chats/screens/chat_info_screen.dart';
 import '../../features/chats/screens/chat_list_screen.dart';
+import '../../features/contacts/screens/contact_list_screen.dart';
 import '../../features/groups/screens/group_detail_screen.dart';
 import '../../features/groups/screens/group_info_screen.dart';
 import '../../features/groups/screens/group_list_screen.dart';
@@ -44,6 +45,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/chats',
                 builder: (context, state) => const ChatListScreen(),
                 routes: [
+                  GoRoute(
+                    path: 'contacts',
+                    builder: (context, state) => const ContactListScreen(),
+                  ),
                   GoRoute(
                     path: ':chatId',
                     builder: (context, state) => ChatDetailScreen(

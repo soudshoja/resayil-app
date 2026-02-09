@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/chat.dart';
 import '../../../core/models/message.dart';
@@ -11,9 +12,24 @@ final chatsProvider =
 class ChatsNotifier extends AsyncNotifier<List<Chat>> {
   int _currentPage = 1;
   bool _hasMore = true;
+  Timer? _pollingTimer;
 
   @override
-  Future<List<Chat>> build() => _fetchPage(1);
+  Future<List<Chat>> build() async {
+    // Start polling timer for chat list updates (every 30 seconds)
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => refresh(),
+    );
+
+    // Cancel timer when provider is disposed
+    ref.onDispose(() {
+      _pollingTimer?.cancel();
+    });
+
+    return _fetchPage(1);
+  }
 
   Future<List<Chat>> _fetchPage(int page) async {
     final repo = ref.read(chatsRepositoryProvider);
@@ -70,9 +86,24 @@ final chatMessagesProvider =
 class ChatMessagesNotifier extends FamilyAsyncNotifier<List<Message>, String> {
   int _currentPage = 1;
   bool _hasMore = true;
+  Timer? _pollingTimer;
 
   @override
-  Future<List<Message>> build(String arg) => _fetchPage(arg, 1);
+  Future<List<Message>> build(String arg) async {
+    // Start polling timer for message updates (every 5 seconds)
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => refresh(),
+    );
+
+    // Cancel timer when provider is disposed
+    ref.onDispose(() {
+      _pollingTimer?.cancel();
+    });
+
+    return _fetchPage(arg, 1);
+  }
 
   Future<List<Message>> _fetchPage(String chatId, int page) async {
     final repo = ref.read(chatsRepositoryProvider);

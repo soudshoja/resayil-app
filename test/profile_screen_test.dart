@@ -154,8 +154,7 @@ void main() {
 
     test('Profile data state is handled correctly', () {
       // Simulate data state
-      final hasData = testProfile != null;
-      expect(hasData, isTrue);
+      expect(testProfile.name, isNotEmpty);
     });
 
     test('Edit name dialog interaction flow', () {

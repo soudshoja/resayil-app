@@ -234,7 +234,7 @@ void main() {
       final isLoading = false;
       final hasError = false;
 
-      expect(!isLoading || hasError, isTrue);
+      expect(isLoading || hasError, isFalse);
     });
 
     test('Contact picker shows loading state during fetch', () {

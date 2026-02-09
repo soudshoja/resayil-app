@@ -112,10 +112,10 @@ void main() {
       );
 
       // Simulate onDispose callback
-      final onDispose = () {
+      void onDispose() {
         onDisposeCalled = true;
         timer.cancel();
-      };
+      }
 
       onDispose();
 

@@ -1,6 +1,6 @@
 name: resayil_app
 description: "Resayil WhatsApp Business - Mobile App"
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+2
 
 environment:
@@ -35,6 +35,7 @@ dependencies:
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
   google_fonts: ^6.2.1
+  cupertino_icons: ^1.0.8
 
   # Local Database
   drift: ^2.22.1

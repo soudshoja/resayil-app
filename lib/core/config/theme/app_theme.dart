@@ -35,7 +35,7 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         showUnselectedLabels: true,
       ),
-      tabBarTheme: const TabBarTheme(
+      tabBarTheme: const TabBarThemeData(
         labelColor: AppColors.tabSelected,
         unselectedLabelColor: AppColors.tabUnselected,
         indicatorColor: AppColors.tabIndicator,
@@ -46,7 +46,7 @@ class AppTheme {
         backgroundColor: AppColors.fab,
         foregroundColor: Colors.white,
       ),
-      cardTheme: const CardTheme(
+      cardTheme: const CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
@@ -85,7 +85,7 @@ class AppTheme {
       popupMenuTheme: const PopupMenuThemeData(
         color: AppColors.surface,
       ),
-      dialogTheme: const DialogTheme(
+      dialogTheme: const DialogThemeData(
         backgroundColor: AppColors.surface,
       ),
     );

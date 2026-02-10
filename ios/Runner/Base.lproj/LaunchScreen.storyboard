@@ -37,11 +37,6 @@
                                             <constraint firstAttribute="width" constant="150" id="circle-width"/>
                                             <constraint firstAttribute="height" constant="150" id="circle-height"/>
                                         </constraints>
-                                        <userDefinedRuntimeAttributes>
-                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                                <real key="value" value="75"/>
-                                            </userDefinedRuntimeAttribute>
-                                        </userDefinedRuntimeAttributes>
                                     </view>
 
                                     <!-- Logo/Icon placeholder -->

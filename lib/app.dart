@@ -17,8 +17,12 @@ class ResayilApp extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final locale = ref.watch(localeProvider);
 
-    // Initialize connectivity-based retry for pending messages
-    ref.watch(pendingMessagesRetryProvider);
+    // Initialize connectivity-based retry for pending messages ONLY when authenticated
+    ref.listen(authStateProvider, (previous, current) {
+      if (current.hasValue && current.value == true) {
+        ref.read(pendingMessagesRetryProvider);
+      }
+    });
 
     return MaterialApp(
       title: 'Resayil',
@@ -107,6 +111,9 @@ class _ErrorScreen extends StatelessWidget {
 
   String _getErrorTitle(Object error) {
     final errorStr = error.toString();
+    if (errorStr.contains('401') || errorStr.contains('Unauthorized')) {
+      return 'Session Expired';
+    }
     if (errorStr.contains('timeout') || errorStr.contains('TimeoutException')) {
       return 'Connection Timeout';
     }
@@ -118,6 +125,9 @@ class _ErrorScreen extends StatelessWidget {
 
   String _getErrorMessage(Object error) {
     final errorStr = error.toString();
+    if (errorStr.contains('401') || errorStr.contains('Unauthorized')) {
+      return 'Your session has expired. Please login again.';
+    }
     if (errorStr.contains('Firebase initialization timed out')) {
       return 'Firebase took too long to initialize. This usually happens with slow network connections. Tap Retry to try again.';
     }

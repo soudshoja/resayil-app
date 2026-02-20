@@ -2,6 +2,12 @@ class ApiConstants {
   ApiConstants._();
 
   static const baseUrl = 'https://wa.resayil.io/api/v1';
+  static const baseWebUrl = 'https://wa.resayil.io';
+
+  // Auth endpoints
+  static const login = '/login';
+  static const registerUrl = 'https://wa.resayil.io/register';
+  static const recoverUrl = 'https://wa.resayil.io/recover';
 
   // Chat endpoints
   static const chats = '/chats';

@@ -45,7 +45,7 @@ class AuthNotifier extends AsyncNotifier<bool> {
   Future<bool> build() async {
     final storage = ref.read(secureStorageProvider);
     try {
-      return await storage.hasApiKey().timeout(
+      final token = await storage.getToken().timeout(
         _storageTimeoutDuration,
         onTimeout: () {
           throw TimeoutException(
@@ -53,24 +53,18 @@ class AuthNotifier extends AsyncNotifier<bool> {
           );
         },
       );
-    } catch (e) {
-      // If storage times out, assume no API key
-      // ignore: avoid_print
-      print('Auth check storage error: $e');
-      return false;
-    }
-  }
 
-  Future<bool> login(String apiKey) async {
-    state = const AsyncValue.loading();
-    try {
-      // Validate API key by calling /profile with retry logic
+      if (token == null || token.isEmpty) {
+        return false;
+      }
+
+      // Validate token by calling /profile
       return await _retryWithBackoff(
         () async {
           final dio = Dio(BaseOptions(
             baseUrl: ApiConstants.baseUrl,
             headers: {
-              'Authorization': 'Bearer $apiKey',
+              'Authorization': 'Bearer $token',
               'Accept': 'application/json',
             },
             connectTimeout: _apiTimeoutDuration,
@@ -82,14 +76,67 @@ class AuthNotifier extends AsyncNotifier<bool> {
             _apiTimeoutDuration,
             onTimeout: () {
               throw TimeoutException(
-                'API authentication timed out after ${_apiTimeoutDuration.inSeconds} seconds. Please check your network connection.',
+                'API validation timed out after ${_apiTimeoutDuration.inSeconds} seconds.',
+              );
+            },
+          );
+
+          return response.statusCode == 200;
+        },
+        maxRetries: 2,
+        initialDelay: const Duration(milliseconds: 500),
+      );
+    } catch (e) {
+      // If token validation fails, assume not authenticated
+      // ignore: avoid_print
+      print('Auth check error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> login(String email, String password) async {
+    state = const AsyncValue.loading();
+    try {
+      return await _retryWithBackoff(
+        () async {
+          final dio = Dio(BaseOptions(
+            baseUrl: ApiConstants.baseWebUrl,
+            headers: {
+              'Accept': 'application/json',
+            },
+            connectTimeout: _apiTimeoutDuration,
+            receiveTimeout: _apiTimeoutDuration,
+            sendTimeout: _apiTimeoutDuration,
+          ));
+
+          final response = await dio.post(
+            ApiConstants.login,
+            data: {
+              'email': email,
+              'password': password,
+              'timezone': DateTime.now().timeZoneOffset.inHours,
+            },
+          ).timeout(
+            _apiTimeoutDuration,
+            onTimeout: () {
+              throw TimeoutException(
+                'Login timed out after ${_apiTimeoutDuration.inSeconds} seconds. Please check your network connection.',
               );
             },
           );
 
           if (response.statusCode == 200) {
+            // Extract token from response
+            final token = response.data['token'] ??
+                response.data['access_token'] ??
+                response.data['data']['token'];
+
+            if (token == null) {
+              throw Exception('No token in response');
+            }
+
             final storage = ref.read(secureStorageProvider);
-            await storage.saveApiKey(apiKey).timeout(
+            await storage.saveToken(token).timeout(
               _storageTimeoutDuration,
               onTimeout: () {
                 throw TimeoutException(
@@ -100,15 +147,16 @@ class AuthNotifier extends AsyncNotifier<bool> {
             state = const AsyncValue.data(true);
             return true;
           }
+
           state = const AsyncValue.data(false);
           return false;
         },
-        maxRetries: 3,
+        maxRetries: 2,
         initialDelay: const Duration(milliseconds: 500),
       );
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
-      return false;
+      rethrow;
     }
   }
 

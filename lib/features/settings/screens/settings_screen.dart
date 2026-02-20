@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/config/theme/app_colors.dart';
-import '../../../core/services/secure_storage_service.dart';
 import '../../../core/widgets/chat_avatar.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/locale_provider.dart';
@@ -40,13 +39,6 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
 
           // Settings items
-          _buildSettingsTile(
-            icon: Icons.key,
-            iconBg: const Color(0xFF1a73e8),
-            title: 'API Key',
-            subtitle: 'Manage your API connection',
-            onTap: () => _showApiKeyDialog(context, ref),
-          ),
           _buildSettingsTile(
             icon: Icons.notifications,
             iconBg: const Color(0xFFe91e63),
@@ -166,86 +158,6 @@ class SettingsScreen extends ConsumerWidget {
       ),
       onTap: onTap,
     );
-  }
-
-  Future<void> _showApiKeyDialog(BuildContext context, WidgetRef ref) async {
-    final storage = ref.read(secureStorageProvider);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final currentKey = await storage.getApiKey();
-
-    if (!context.mounted) return;
-
-    final textController = TextEditingController(text: currentKey ?? '');
-    bool isLoading = false;
-
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('API Key'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Enter or update your API key:',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: textController,
-                decoration: InputDecoration(
-                  hintText: 'Paste your API key here',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                ),
-                maxLines: 3,
-                obscureText: true,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: isLoading ? null : () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      setState(() => isLoading = true);
-                      try {
-                        final newKey = textController.text.trim();
-                        if (newKey.isEmpty) {
-                          scaffoldMessenger.showSnackBar(
-                            const SnackBar(content: Text('API key cannot be empty')),
-                          );
-                          return;
-                        }
-                        await storage.saveApiKey(newKey);
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          scaffoldMessenger.showSnackBar(
-                            const SnackBar(content: Text('API key updated successfully')),
-                          );
-                        }
-                      } catch (e) {
-                        scaffoldMessenger.showSnackBar(
-                          SnackBar(content: Text('Error: ${e.toString()}')),
-                        );
-                      } finally {
-                        setState(() => isLoading = false);
-                      }
-                    },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      ),
-    );
-    textController.dispose();
   }
 
   Future<void> _showLanguageDialog(BuildContext context, WidgetRef ref) async {

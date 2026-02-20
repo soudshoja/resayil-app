@@ -12,9 +12,9 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final apiKey = await _storage.getApiKey();
-    if (apiKey != null) {
-      options.headers['Authorization'] = 'Bearer $apiKey';
+    final token = await _storage.getToken();
+    if (token != null) {
+      options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);
   }

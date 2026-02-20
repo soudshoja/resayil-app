@@ -7,7 +7,7 @@ final secureStorageProvider = Provider<SecureStorageService>((ref) {
 });
 
 class SecureStorageService {
-  static const _apiKeyKey = 'resayil_api_key';
+  static const _tokenKey = 'resayil_auth_token';
   static const _localeKey = 'resayil_locale';
   static const _storageTimeoutDuration = Duration(seconds: 10);
 
@@ -15,58 +15,58 @@ class SecureStorageService {
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
-  Future<void> saveApiKey(String apiKey) async {
+  Future<void> saveToken(String token) async {
     try {
-      await _storage.write(key: _apiKeyKey, value: apiKey).timeout(
+      await _storage.write(key: _tokenKey, value: token).timeout(
         _storageTimeoutDuration,
         onTimeout: () {
-          throw TimeoutException('Failed to save API key');
+          throw TimeoutException('Failed to save token');
         },
       );
     } catch (e) {
       // ignore: avoid_print
-      print('Error saving API key: $e');
+      print('Error saving token: $e');
       rethrow;
     }
   }
 
-  Future<String?> getApiKey() async {
+  Future<String?> getToken() async {
     try {
-      return await _storage.read(key: _apiKeyKey).timeout(
+      return await _storage.read(key: _tokenKey).timeout(
         _storageTimeoutDuration,
         onTimeout: () {
-          throw TimeoutException('Failed to retrieve API key');
+          throw TimeoutException('Failed to retrieve token');
         },
       );
     } catch (e) {
       // ignore: avoid_print
-      print('Error retrieving API key: $e');
+      print('Error retrieving token: $e');
       return null;
     }
   }
 
-  Future<void> deleteApiKey() async {
+  Future<void> deleteToken() async {
     try {
-      await _storage.delete(key: _apiKeyKey).timeout(
+      await _storage.delete(key: _tokenKey).timeout(
         _storageTimeoutDuration,
         onTimeout: () {
-          throw TimeoutException('Failed to delete API key');
+          throw TimeoutException('Failed to delete token');
         },
       );
     } catch (e) {
       // ignore: avoid_print
-      print('Error deleting API key: $e');
+      print('Error deleting token: $e');
       rethrow;
     }
   }
 
-  Future<bool> hasApiKey() async {
+  Future<bool> hasToken() async {
     try {
-      final key = await getApiKey();
-      return key != null && key.isNotEmpty;
+      final token = await getToken();
+      return token != null && token.isNotEmpty;
     } catch (e) {
       // ignore: avoid_print
-      print('Error checking API key: $e');
+      print('Error checking token: $e');
       return false;
     }
   }

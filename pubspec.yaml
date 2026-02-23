@@ -1,7 +1,7 @@
 name: resayil_app
 description: "Resayil WhatsApp Business - Mobile App"
 publish_to: "none"
-version: 1.0.0+2
+version: 1.0.0+26022301
 
 environment:
   sdk: ^3.6.2
